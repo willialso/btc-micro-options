@@ -1,0 +1,33 @@
+name: Lovable Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Build with Lovable
+      env:
+        LOVABLE_PROJECT_ID: ada2784e-9a2c-48b3-8c9b-c216960cebfe
+        LOVABLE_API_KEY: ${{ secrets.LOVABLE_API_KEY }}
+      run: |
+        curl -X POST https://api.lovable.dev/projects/$LOVABLE_PROJECT_ID/build \
+          -H "Authorization: Bearer $LOVABLE_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"repository": "willialso/micro-options-pulse-btc", "branch": "main"}' 
