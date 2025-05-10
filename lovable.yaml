@@ -1,0 +1,35 @@
+name: btc-micro-options
+description: Bitcoin micro options trading platform with real-time pricing and dynamic hedging
+version: 1.0.0
+
+build:
+  python: 3.8
+  requirements:
+    - flask
+    - numpy
+    - scipy
+    - requests
+    - python-dotenv
+
+services:
+  web:
+    command: python btc-micro-options/app.py
+    ports:
+      - 5000:5000
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=btc-micro-options/app.py
+
+deploy:
+  github:
+    branch: main
+    auto_deploy: true
+    build_on_push: true
+
+monitoring:
+  enabled: true
+  metrics:
+    - cpu
+    - memory
+    - requests
+    - response_time 

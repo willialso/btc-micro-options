@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, jsonify, request, render_template, Response
+from flask import Flask, jsonify, request, render_template, Response, session
 import json
 import time
 import datetime
@@ -9,9 +9,17 @@ import numpy as np
 import random
 import uuid
 from datetime import timedelta
+from lovable_integration import (
+    lovable_auth_required,
+    lovable_login,
+    lovable_callback,
+    lovable_logout,
+    sync_with_lovable
+)
 
 # Define the Flask application
 app = Flask(__name__, static_folder='static', template_folder='templates')
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-here')  # Required for session
 
 # In-memory storage for simulation purposes
 class SimulationState:
@@ -446,12 +454,26 @@ class SimulationState:
 simulation = SimulationState()
 
 # API Routes
+@app.route('/lovable/login')
+def handle_lovable_login():
+    return lovable_login()
+
+@app.route('/lovable/callback')
+def handle_lovable_callback():
+    return lovable_callback()
+
+@app.route('/lovable/logout')
+def handle_lovable_logout():
+    return lovable_logout()
+
 @app.route('/')
+@lovable_auth_required
 def index():
     """Serve the main application page"""
     return render_template('index.html')
 
 @app.route('/api/price', methods=['GET'])
+@lovable_auth_required
 def get_price():
     """Get current BTC price data"""
     price_data = {
@@ -464,6 +486,7 @@ def get_price():
     return jsonify(price_data)
 
 @app.route('/api/price_history', methods=['GET'])
+@lovable_auth_required
 def get_price_history():
     """Get historical price data"""
     # Limit to 100 most recent points for performance
@@ -471,6 +494,7 @@ def get_price_history():
     return jsonify(history)
 
 @app.route('/api/status', methods=['GET'])
+@lovable_auth_required
 def get_status():
     """Get platform status including liquidity and metrics"""
     active_options = sum(1 for o in simulation.options if o['status'] == 'active')
@@ -496,11 +520,13 @@ def get_status():
     return jsonify(status)
 
 @app.route('/api/options', methods=['GET'])
+@lovable_auth_required
 def get_options():
     """Get list of all options"""
     return jsonify(simulation.options)
 
 @app.route('/api/options', methods=['POST'])
+@lovable_auth_required
 def create_option():
     """Create a new option"""
     data = request.json
@@ -512,9 +538,17 @@ def create_option():
         float(data.get('quantity', 1))
     )
     
+    # After creating the option, sync with Lovable
+    sync_data = {
+        'type': 'option_created',
+        'option': option,
+        'timestamp': datetime.datetime.now().isoformat()
+    }
+    sync_with_lovable(sync_data)
     return jsonify(option)
 
 @app.route('/api/metrics', methods=['GET'])
+@lovable_auth_required
 def get_metrics():
     """Get detailed platform metrics including hedging and fees"""
     # Calculate hedge delta by exchange
@@ -549,6 +583,7 @@ def get_metrics():
     return jsonify(metrics)
 
 @app.route('/api/events', methods=['GET'])
+@lovable_auth_required
 def get_events():
     """Server-sent events for real-time updates"""
     def generate():
