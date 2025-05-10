@@ -23,10 +23,11 @@ def setup_lovable_integration():
 
     # Configure GitHub integration
     github_config = {
-        'repository': 'willialso/micro-options-pulse-btc',
+        'repository': 'willialso/micro-options-pulse-btc5',
         'branch': 'main',
         'auto_deploy': True,
-        'build_on_push': True
+        'build_on_push': True,
+        'webhook_enabled': True
     }
 
     try:
@@ -43,7 +44,10 @@ def setup_lovable_integration():
         build_response = requests.post(
             f'{LOVABLE_API_URL}/projects/{PROJECT_ID}/build',
             headers=headers,
-            json={'trigger': 'manual'}
+            json={
+                'trigger': 'manual',
+                'repository': 'willialso/micro-options-pulse-btc5'
+            }
         )
         build_response.raise_for_status()
         print("Initial build triggered successfully")

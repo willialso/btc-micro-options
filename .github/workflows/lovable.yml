@@ -33,7 +33,7 @@ jobs:
           -H "Authorization: Bearer $LOVABLE_API_KEY" \
           -H "Content-Type: application/json" \
           -d '{
-            "repository": "willialso/micro-options-pulse-btc",
+            "repository": "willialso/micro-options-pulse-btc5",
             "branch": "main",
             "config": {
               "build_type": "python",
