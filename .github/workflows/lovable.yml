@@ -5,17 +5,19 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:  # Allow manual triggers
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.8'
+        cache: 'pip'
     
     - name: Install dependencies
       run: |
@@ -30,4 +32,14 @@ jobs:
         curl -X POST https://api.lovable.dev/projects/$LOVABLE_PROJECT_ID/build \
           -H "Authorization: Bearer $LOVABLE_API_KEY" \
           -H "Content-Type: application/json" \
-          -d '{"repository": "willialso/micro-options-pulse-btc", "branch": "main"}' 
+          -d '{
+            "repository": "willialso/micro-options-pulse-btc",
+            "branch": "main",
+            "config": {
+              "build_type": "python",
+              "python_version": "3.8",
+              "build_command": "pip install -r requirements.txt",
+              "start_command": "python btc-micro-options/app.py",
+              "port": 5000
+            }
+          }' 

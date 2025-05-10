@@ -5,11 +5,12 @@ version: 1.0.0
 build:
   python: 3.8
   requirements:
-    - flask
-    - numpy
-    - scipy
-    - requests
-    - python-dotenv
+    - flask==2.0.1
+    - numpy==1.21.0
+    - scipy==1.7.0
+    - requests==2.26.0
+    - python-dotenv==0.19.0
+    - gunicorn==20.1.0
 
 services:
   web:
@@ -19,12 +20,19 @@ services:
     environment:
       - FLASK_ENV=production
       - FLASK_APP=btc-micro-options/app.py
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      path: /api/status
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 deploy:
   github:
     branch: main
     auto_deploy: true
     build_on_push: true
+    environment: production
 
 monitoring:
   enabled: true
@@ -32,4 +40,16 @@ monitoring:
     - cpu
     - memory
     - requests
-    - response_time 
+    - response_time
+  alerts:
+    - type: error_rate
+      threshold: 1%
+    - type: response_time
+      threshold: 2000ms
+    - type: cpu_usage
+      threshold: 80%
+
+logging:
+  level: info
+  retention: 30d
+  format: json 
